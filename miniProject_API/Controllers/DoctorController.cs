@@ -1,13 +1,9 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using miniProject_API.Data;
-using miniProject_API.DTOs.DepartmentDTOs;
 using miniProject_API.DTOs.DoctorDTOs;
 using miniProject_API.Entities;
-using miniProject_API.Extension;
-using miniProject_API.Helpers;
 
 namespace miniProject_API.Controllers
 {
@@ -23,18 +19,22 @@ namespace miniProject_API.Controllers
             _mapper = mapper;
         }
         [HttpGet("")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(int page=1,string search=null)
         {
-            var doctors = await _hospitalDbContext.Doctors
-                .Include(d => d.Department)
-                .AsNoTracking()
+            var query = _hospitalDbContext.Doctors.Include(d => d.Department).AsQueryable();
+            if (search != null) query = query.Where(q => q.Name.Contains(search));
+            var datas = await query.Skip((page - 1) * 3)
+                .Take(3)
                 .ToListAsync();
-            List<DoctorReturnDTO> returnList = new();
-            foreach (var doctor in doctors)
+            var totalCount = await query.CountAsync();
+            DoctorListDTO doctorListDTO = new DoctorListDTO();
+            foreach (var doctor in datas)
             {
-                returnList.Add(_mapper.Map<DoctorReturnDTO>(doctor));
+                doctorListDTO.Doctors.Add(_mapper.Map<DoctorReturnDTO>(doctor));
             }
-            return Ok(returnList);
+            doctorListDTO.CurrentPage = page;
+            doctorListDTO.TotalCount = totalCount;
+            return Ok(doctorListDTO);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)

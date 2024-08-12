@@ -22,18 +22,22 @@ namespace miniProject_API.Controllers
             _mapper = mapper;
         }
         [HttpGet("")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(int page = 1, string search = null)
         {
-            var departments = await _hospitalDbContext.Departments
-                .Include(d => d.Doctors)
-                .AsNoTracking()
+            var query = _hospitalDbContext.Departments.Include(d => d.Doctors).AsQueryable();
+            if (search != null) query=query.Where(q=>q.Name.Contains(search));
+            var datas = await query.Skip((page - 1) * 3)
+                .Take(3)
                 .ToListAsync();
-            List<DepartmentReturnDTO> returnList = new();
-            foreach (var department in departments)
+            var totalCount = await query.CountAsync();
+            DepartmentListDTO departmentListDTO = new DepartmentListDTO();
+            foreach (var department in datas)
             {
-                returnList.Add(_mapper.Map<DepartmentReturnDTO>(department));
+                departmentListDTO.Departments.Add(_mapper.Map<DepartmentReturnDTO>(department));
             }
-            return Ok(returnList);
+            departmentListDTO.CurrentPage = page;
+            departmentListDTO.TotalCount = totalCount;
+            return Ok(departmentListDTO);
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int? id)
@@ -54,7 +58,7 @@ namespace miniProject_API.Controllers
             return StatusCode(201);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromRoute]int id, [FromBody]DepartmentUpdateDTO departmentDTO)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] DepartmentUpdateDTO departmentDTO)
         {
             var existDepartment = await _hospitalDbContext.Departments.FirstOrDefaultAsync(g => g.Id == id);
             if (existDepartment == null) return NotFound();
