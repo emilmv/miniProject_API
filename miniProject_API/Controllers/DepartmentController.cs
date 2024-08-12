@@ -54,7 +54,7 @@ namespace miniProject_API.Controllers
             return StatusCode(201);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, DepartmentUpdateDTO departmentDTO)
+        public async Task<IActionResult> Update([FromRoute]int id, [FromBody]DepartmentUpdateDTO departmentDTO)
         {
             var existDepartment = await _hospitalDbContext.Departments.FirstOrDefaultAsync(g => g.Id == id);
             if (existDepartment == null) return NotFound();

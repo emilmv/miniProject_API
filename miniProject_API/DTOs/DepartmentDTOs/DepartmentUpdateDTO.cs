@@ -13,12 +13,13 @@ namespace miniProject_API.DTOs.DepartmentDTOs
         public DepartmentUpdateDTOValidator()
         {
             RuleFor(g => g.Name)
+                .NotNull()
                 .MaximumLength(10)
                 .WithMessage("Department name too large")
                 .MinimumLength(3)
                 .WithMessage("Department name too small");
             RuleFor(g => g.Limit)
-                .ExclusiveBetween(1, 50)
+                .InclusiveBetween(1, 50)
                 .WithMessage("Range do not meet requirements");
             RuleFor(g => g)
                 .Custom((g, context) =>

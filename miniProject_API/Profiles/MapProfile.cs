@@ -29,6 +29,7 @@ namespace miniProject_API.Profiles
             //Doctor Map
             CreateMap<Doctor,DoctorInDepartmentReturnDTO>();
             CreateMap<Doctor, DoctorReturnDTO>();
+            CreateMap<DoctorCreateDTO,Doctor>();
             //Department Map
 
             CreateMap<Department, DepartmentReturnDTO>()
